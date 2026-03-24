@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from src.core.config import settings
 from src.core.models import Opportunity, RiskLevel
 from src.core.orchestrator import Orchestrator
@@ -98,3 +98,201 @@ def run_cycle() -> dict:
 @app.post("/run-self-improvement")
 def run_self_improvement(base_agent: str = "orchestrator") -> dict:
     return self_improver.run_cycle(base_agent=base_agent)
+
+
+@app.post("/leads/{lead_id}/auto-send")
+def auto_send(lead_id: int) -> dict:
+    lead = repo.get_lead(lead_id)
+
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    if not getattr(lead, "eligible", False):
+        raise HTTPException(status_code=400, detail="Lead not eligible")
+
+    if getattr(lead, "contacted", False):
+        return {"message": "Already contacted"}
+
+    subject = "Quick question about missed calls"
+
+    body = f"""Hi {lead.name or ''},
+
+Do you have anything automatically following up on missed calls?
+
+We help contractors capture more jobs automatically.
+
+Want a quick demo?
+
+– Tyler
+"""
+
+    print(f"Sending email to {lead.email}")
+    repo.mark_lead_contacted(lead_id)
+
+    return {
+        "message": "Auto-sent",
+        "subject": subject,
+        "body": body,
+    }
+from fastapi import HTTPException
+
+@app.post("/leads")
+def create_lead(email: str, name: str = "", company: str = ""):
+    lead_id = repo.add_lead(email=email, name=name, company=company)
+    return {"id": lead_id}
+
+
+@app.get("/leads")
+def list_leads():
+    return repo.list_leads()
+
+
+@app.post("/leads/{lead_id}/eligible")
+def set_eligible(lead_id: int, eligible: bool = True):
+    repo.set_lead_eligible(lead_id, eligible)
+    return {"status": "updated"}
+
+
+@app.post("/leads/{lead_id}/auto-send")
+def auto_send(lead_id: int):
+    lead = repo.get_lead(lead_id)
+
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    if not lead["eligible"]:
+        raise HTTPException(status_code=400, detail="Lead not eligible")
+
+    if lead["contacted"]:
+        return {"message": "Already contacted"}
+
+    subject = "Quick question about missed calls"
+
+    body = f"""Hi {lead.get("name","")},
+
+Do you have anything automatically following up on missed calls?
+
+We help contractors capture more jobs automatically.
+
+Want a quick demo?
+
+– Tyler
+"""
+
+    print(f"Sending email to {lead['email']}")
+
+    repo.mark_lead_contacted(lead_id)
+
+    return {
+        "message": "Auto-sent",
+        "subject": subject,
+        "body": body
+    }
+from fastapi import HTTPException
+
+@app.post("/leads")
+def create_lead(email: str, name: str = "", company: str = ""):
+    lead_id = repo.add_lead(email=email, name=name, company=company)
+    return {"id": lead_id}
+
+
+@app.get("/leads")
+def list_leads():
+    return repo.list_leads()
+
+
+@app.post("/leads/{lead_id}/eligible")
+def set_eligible(lead_id: int, eligible: bool = True):
+    repo.set_lead_eligible(lead_id, eligible)
+    return {"status": "updated"}
+
+
+@app.post("/leads/{lead_id}/auto-send")
+def auto_send(lead_id: int):
+    lead = repo.get_lead(lead_id)
+
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    if not lead["eligible"]:
+        raise HTTPException(status_code=400, detail="Lead not eligible")
+
+    if lead["contacted"]:
+        return {"message": "Already contacted"}
+
+    subject = "Quick question about missed calls"
+
+    body = f"""Hi {lead.get("name","")},
+
+Do you have anything automatically following up on missed calls?
+
+We help contractors capture more jobs automatically.
+
+Want a quick demo?
+
+– Tyler
+"""
+
+    print(f"Sending email to {lead['email']}")
+
+    repo.mark_lead_contacted(lead_id)
+
+    return {
+        "message": "Auto-sent",
+        "subject": subject,
+        "body": body
+    }
+from fastapi import HTTPException
+
+@app.post("/leads")
+def create_lead(email: str, name: str = "", company: str = ""):
+    lead_id = repo.add_lead(email=email, name=name, company=company)
+    return {"id": lead_id}
+
+
+@app.get("/leads")
+def list_leads():
+    return repo.list_leads()
+
+
+@app.post("/leads/{lead_id}/eligible")
+def set_eligible(lead_id: int, eligible: bool = True):
+    repo.set_lead_eligible(lead_id, eligible)
+    return {"status": "updated"}
+
+
+@app.post("/leads/{lead_id}/auto-send")
+def auto_send(lead_id: int):
+    lead = repo.get_lead(lead_id)
+
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    if not lead["eligible"]:
+        raise HTTPException(status_code=400, detail="Lead not eligible")
+
+    if lead["contacted"]:
+        return {"message": "Already contacted"}
+
+    subject = "Quick question about missed calls"
+
+    body = f"""Hi {lead.get("name","")},
+
+Do you have anything automatically following up on missed calls?
+
+We help contractors capture more jobs automatically.
+
+Want a quick demo?
+
+– Tyler
+"""
+
+    print(f"Sending email to {lead['email']}")
+
+    repo.mark_lead_contacted(lead_id)
+
+    return {
+        "message": "Auto-sent",
+        "subject": subject,
+        "body": body
+    }
