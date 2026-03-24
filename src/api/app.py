@@ -8,7 +8,7 @@ from src.core.self_improvement import SelfImprovementController
 from src.storage.db import init_db
 from src.storage.repo import Repository
 
-app = FastAPI(title=settings.app_name)
+app = FastAPI(title="Autonomous AI Company v2")
 repo = Repository()
 orchestrator = Orchestrator()
 self_improver = SelfImprovementController()
