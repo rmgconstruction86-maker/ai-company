@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from typing import Any
+
 from sqlalchemy import text
+
 from src.storage.db import engine
 from src.core.models import (
     AgentVariant,
     ImprovementProposal,
-    ImprovementStatus,
     MetricSnapshot,
     Opportunity,
     OpportunityStatus,
@@ -19,18 +20,22 @@ class Repository:
     def add_opportunity(self, opportunity: Opportunity) -> int:
         with engine.begin() as conn:
             result = conn.execute(
-                text("""
-                INSERT INTO opportunities
-                (name, niche, description, estimated_revenue, estimated_effort_hours, time_to_cash_days, compliance_risk, score, status)
-                VALUES (:name, :niche, :description, :estimated_revenue, :estimated_effort_hours, :time_to_cash_days, :compliance_risk, :score, :status)
-                """),
+                text(
+                    """
+                    INSERT INTO opportunities
+                    (name, niche, description, estimated_revenue, estimated_effort_hours, time_to_cash_days, compliance_risk, score, status)
+                    VALUES (:name, :niche, :description, :estimated_revenue, :estimated_effort_hours, :time_to_cash_days, :compliance_risk, :score, :status)
+                    """
+                ),
                 opportunity.model_dump(exclude={"id"}),
             )
             return int(result.lastrowid)
 
     def list_opportunities(self) -> list[Opportunity]:
         with engine.begin() as conn:
-            rows = conn.execute(text("SELECT * FROM opportunities ORDER BY score DESC, id ASC")).mappings().all()
+            rows = conn.execute(
+                text("SELECT * FROM opportunities ORDER BY score DESC, id ASC")
+            ).mappings().all()
         return [Opportunity(**dict(r)) for r in rows]
 
     def update_opportunity(self, opportunity_id: int, **fields: Any) -> None:
@@ -39,25 +44,33 @@ class Repository:
         assignments = ", ".join(f"{k} = :{k}" for k in fields)
         params = {**fields, "id": opportunity_id}
         with engine.begin() as conn:
-            conn.execute(text(f"UPDATE opportunities SET {assignments} WHERE id = :id"), params)
+            conn.execute(
+                text(f"UPDATE opportunities SET {assignments} WHERE id = :id"),
+                params,
+            )
 
     def add_task(self, task: Task) -> int:
         payload = task.model_dump(exclude={"id"})
         payload["requires_human_approval"] = 1 if payload["requires_human_approval"] else 0
         with engine.begin() as conn:
             result = conn.execute(
-                text("""
-                INSERT INTO tasks
-                (opportunity_id, agent_name, title, details, status, requires_human_approval)
-                VALUES (:opportunity_id, :agent_name, :title, :details, :status, :requires_human_approval)
-                """),
+                text(
+                    """
+                    INSERT INTO tasks
+                    (opportunity_id, agent_name, title, details, status, requires_human_approval)
+                    VALUES (:opportunity_id, :agent_name, :title, :details, :status, :requires_human_approval)
+                    """
+                ),
                 payload,
             )
             return int(result.lastrowid)
 
     def list_tasks(self) -> list[Task]:
         with engine.begin() as conn:
-            rows = conn.execute(text("SELECT * FROM tasks ORDER BY id ASC")).mappings().all()
+            rows = conn.execute(
+                text("SELECT * FROM tasks ORDER BY id ASC")
+            ).mappings().all()
+
         tasks: list[Task] = []
         for row in rows:
             data = dict(row)
@@ -68,18 +81,22 @@ class Repository:
     def add_variant(self, variant: AgentVariant) -> int:
         with engine.begin() as conn:
             result = conn.execute(
-                text("""
-                INSERT INTO agent_variants
-                (variant_name, base_agent, strategy_notes, expected_revenue_lift, measured_revenue_lift, evaluation_score, status, created_by, promoted_from_variant_id)
-                VALUES (:variant_name, :base_agent, :strategy_notes, :expected_revenue_lift, :measured_revenue_lift, :evaluation_score, :status, :created_by, :promoted_from_variant_id)
-                """),
+                text(
+                    """
+                    INSERT INTO agent_variants
+                    (variant_name, base_agent, strategy_notes, expected_revenue_lift, measured_revenue_lift, evaluation_score, status, created_by, promoted_from_variant_id)
+                    VALUES (:variant_name, :base_agent, :strategy_notes, :expected_revenue_lift, :measured_revenue_lift, :evaluation_score, :status, :created_by, :promoted_from_variant_id)
+                    """
+                ),
                 variant.model_dump(exclude={"id"}),
             )
             return int(result.lastrowid)
 
     def list_variants(self) -> list[AgentVariant]:
         with engine.begin() as conn:
-            rows = conn.execute(text("SELECT * FROM agent_variants ORDER BY evaluation_score DESC, id ASC")).mappings().all()
+            rows = conn.execute(
+                text("SELECT * FROM agent_variants ORDER BY evaluation_score DESC, id ASC")
+            ).mappings().all()
         return [AgentVariant(**dict(r)) for r in rows]
 
     def update_variant(self, variant_id: int, **fields: Any) -> None:
@@ -88,25 +105,33 @@ class Repository:
         assignments = ", ".join(f"{k} = :{k}" for k in fields)
         params = {**fields, "id": variant_id}
         with engine.begin() as conn:
-            conn.execute(text(f"UPDATE agent_variants SET {assignments} WHERE id = :id"), params)
+            conn.execute(
+                text(f"UPDATE agent_variants SET {assignments} WHERE id = :id"),
+                params,
+            )
 
     def add_improvement_proposal(self, proposal: ImprovementProposal) -> int:
         payload = proposal.model_dump(exclude={"id"})
         payload["requires_human_approval"] = 1 if payload["requires_human_approval"] else 0
         with engine.begin() as conn:
             result = conn.execute(
-                text("""
-                INSERT INTO improvement_proposals
-                (variant_name, proposal_summary, proposed_patch, safety_notes, projected_gain, status, requires_human_approval)
-                VALUES (:variant_name, :proposal_summary, :proposed_patch, :safety_notes, :projected_gain, :status, :requires_human_approval)
-                """),
+                text(
+                    """
+                    INSERT INTO improvement_proposals
+                    (variant_name, proposal_summary, proposed_patch, safety_notes, projected_gain, status, requires_human_approval)
+                    VALUES (:variant_name, :proposal_summary, :proposed_patch, :safety_notes, :projected_gain, :status, :requires_human_approval)
+                    """
+                ),
                 payload,
             )
             return int(result.lastrowid)
 
     def list_improvement_proposals(self) -> list[ImprovementProposal]:
         with engine.begin() as conn:
-            rows = conn.execute(text("SELECT * FROM improvement_proposals ORDER BY id ASC")).mappings().all()
+            rows = conn.execute(
+                text("SELECT * FROM improvement_proposals ORDER BY id ASC")
+            ).mappings().all()
+
         proposals: list[ImprovementProposal] = []
         for row in rows:
             data = dict(row)
@@ -120,7 +145,10 @@ class Repository:
         assignments = ", ".join(f"{k} = :{k}" for k in fields)
         params = {**fields, "id": proposal_id}
         with engine.begin() as conn:
-            conn.execute(text(f"UPDATE improvement_proposals SET {assignments} WHERE id = :id"), params)
+            conn.execute(
+                text(f"UPDATE improvement_proposals SET {assignments} WHERE id = :id"),
+                params,
+            )
 
     def metrics(self) -> MetricSnapshot:
         opportunities = self.list_opportunities()
@@ -128,8 +156,13 @@ class Repository:
         total_tasks = len(tasks)
         blocked_tasks = sum(1 for t in tasks if t.status == TaskStatus.blocked)
         pending_approvals = sum(1 for t in tasks if t.status == TaskStatus.awaiting_approval)
-        projected_revenue = sum(o.estimated_revenue for o in opportunities if o.status != OpportunityStatus.blocked)
+        projected_revenue = sum(
+            o.estimated_revenue
+            for o in opportunities
+            if o.status != OpportunityStatus.blocked
+        )
         average_score = (sum(o.score for o in opportunities) / len(opportunities)) if opportunities else 0.0
+
         return MetricSnapshot(
             total_opportunities=len(opportunities),
             total_tasks=total_tasks,
@@ -138,3 +171,49 @@ class Repository:
             projected_revenue=projected_revenue,
             average_score=average_score,
         )
+
+    def get_lead(self, lead_id: int) -> dict | None:
+        with engine.begin() as conn:
+            row = conn.execute(
+                text("SELECT * FROM leads WHERE id = :id"),
+                {"id": lead_id},
+            ).mappings().first()
+        return dict(row) if row else None
+
+    def mark_lead_contacted(self, lead_id: int) -> None:
+        with engine.begin() as conn:
+            conn.execute(
+                text("UPDATE leads SET contacted = 1 WHERE id = :id"),
+                {"id": lead_id},
+            )
+
+    def set_lead_eligible(self, lead_id: int, eligible: bool) -> None:
+        with engine.begin() as conn:
+            conn.execute(
+                text("UPDATE leads SET eligible = :eligible WHERE id = :id"),
+                {"id": lead_id, "eligible": 1 if eligible else 0},
+            )
+
+    def add_lead(self, email: str, name: str = "", company: str = "") -> int:
+        with engine.begin() as conn:
+            result = conn.execute(
+                text(
+                    """
+                    INSERT INTO leads (email, name, company, eligible, contacted)
+                    VALUES (:email, :name, :company, 0, 0)
+                    """
+                ),
+                {
+                    "email": email,
+                    "name": name,
+                    "company": company,
+                },
+            )
+            return int(result.lastrowid)
+
+    def list_leads(self) -> list[dict]:
+        with engine.begin() as conn:
+            rows = conn.execute(
+                text("SELECT * FROM leads ORDER BY id ASC")
+            ).mappings().all()
+        return [dict(row) for row in rows]
