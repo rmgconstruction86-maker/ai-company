@@ -67,3 +67,14 @@ def init_db() -> None:
             requires_human_approval INTEGER NOT NULL DEFAULT 1
         )
         """))
+
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS leads (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            name TEXT DEFAULT '',
+            company TEXT DEFAULT '',
+            eligible INTEGER NOT NULL DEFAULT 0,
+            contacted INTEGER NOT NULL DEFAULT 0
+        )
+        """))
